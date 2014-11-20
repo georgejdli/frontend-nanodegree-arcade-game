@@ -1,13 +1,16 @@
 // Enemies our player must avoid
 var Enemy = function() {
     //give each enemy a random starting position
-    this.x = getRandomInt(1, 5) * 101;
-    this.y = getRandomInt(2, 5) * 83;
+    //columns 1 to 5
+    this.x = getRandomInt(0, 5) * 101;
+    //rows 2 to 5
+    this.y = getRandomInt(1, 5) * 83;
     // Variables applied to each of our instances go here,
     // we've provided one for you to get started
     // The image/sprite for our enemies, this uses
     // a helper we've provided to easily load images
     this.sprite = 'images/enemy-bug.png';
+    this.speed = randomSpeed();
 };
 
 // Update the enemy's position, required method for game
@@ -16,7 +19,13 @@ Enemy.prototype.update = function(dt) {
     // You should multiply any movement by the dt parameter
     // which will ensure the game runs at the same speed for
     // all computers.
-
+    this.x = this.x + this.speed * dt;
+    //once Enemy moves off screen to the right
+    // set starting x position to 0
+    if (this.x > 505) {
+        this.x = 0;
+        this.y = getRandomInt(1, 5) * 83;
+    }
 };
 
 // Draw the enemy on the screen, required method for game
@@ -28,6 +37,10 @@ Enemy.prototype.render = function() {
 // This class requires an update(), render() and
 // a handleInput() method.
 var Player = function() {
+    //starting position
+    this.x = 2 * 101;
+    //bottom row
+    this.y = 5 * 83;
     this.sprite = 'images/char-boy.png';
 
 
@@ -36,12 +49,24 @@ Player.prototype.update = function(dt) {
 
 };
 Player.prototype.render = function() {
-
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
 };
 Player.prototype.handleInput = function(keyPress) {
-    if (keyPress === 'left') {
-
+    switch (keyPress) {
+        case 'left':
+            this.x > 0 ? this.x = this.x - 101 : this.x = 404;
+            break;
+        case 'right':
+            this.x < 404 ? this.x = this.x + 101 : this.x = 0;
+            break;
+        case 'up':
+            this.y > 83 ? this.y = this.y - 83 : this.y = 415;
+            break;
+        case 'down':
+            this.y < 415 ? this.y = this.y + 83 : this.y = 415;
+            break;
     }
+
 };
 // Now instantiate your objects.
 // Place all enemy objects in an array called allEnemies

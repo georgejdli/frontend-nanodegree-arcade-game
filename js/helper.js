@@ -5,3 +5,7 @@
 function getRandomInt(min, max) {
     return Math.floor(Math.random() * (max - min)) + min;
 }
+
+function randomSpeed() {
+    return Math.ceil(Math.random() * 10) * 20;
+}
