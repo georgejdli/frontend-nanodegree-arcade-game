@@ -64,6 +64,9 @@ var Engine = (function(global) {
      * game loop.
      */
     function init() {
+        document.getElementById('play-again').addEventListener('click', function() {
+            reset();
+        });
         reset();
         lastTime = Date.now();
         main();
@@ -80,7 +83,8 @@ var Engine = (function(global) {
      */
     function update(dt) {
         updateEntities(dt);
-        // checkCollisions();
+        checkCollisions();
+        //update score here
     }
 
     /* This is called by the update function  and loops through all of the
@@ -95,6 +99,38 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+    }
+
+// Collisions
+    //collisions not working well
+    function collides(x, y, r, x2, y2, r2) {
+        if (y === y2){
+            if (x2 <= x && x <= r2) {
+                return true;
+            } else if (x <= x2 && x2 <= r){
+                return true;
+            }
+        } else {
+            return false;
+        }
+    }
+    function boxCollides(pos, size, pos2, size2) {
+        return collides(pos[0], pos[1], pos[0] + size[0],
+                        pos2[0], pos2[1], pos2[0] + size2[0]);
+    }
+    function checkCollisions() {
+        //check collision between player and enemies
+        var i,
+            l = allEnemies.length;
+        for (i = 0; i < l; i++) {
+            var pos2 = allEnemies[i].pos,
+                size2 = allEnemies[i].size;
+            if (boxCollides(player.pos, player.size, pos2, size2)) {
+                //subtract health
+                //check if health is zero, game over if it is
+                player.reset();
+            }
+        }
     }
 
     /* This function initially draws the "game level", it will then call
@@ -181,4 +217,5 @@ var Engine = (function(global) {
      * from within their app.js files.
      */
     global.ctx = ctx;
+    global.init = init;
 })(this);
