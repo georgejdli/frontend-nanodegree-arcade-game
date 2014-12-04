@@ -1,6 +1,14 @@
-frontend-nanodegree-arcade-game
+Arcade Game Clone
 ===============================
+This is project #3 for the Front End Nanodegree from Udacity
 
-Students should use this rubric: https://www.udacity.com/course/viewer#!/c-ud015/l-3072058665/m-3072588797
+To run the game download the repository and open the index.html
 
-for self-checking their submission.
+To play:
+Use the arrow keys to move.
+Collect gems and bring them to the river to score points.
+If you are hit by a bug you lose any gems collected that you did not bring to the river.
+You lose one life (a heart) every time a bug hits your player character.
+When you lose all your lives the game ends.
+
+High Score tracking is kept using localStorage.

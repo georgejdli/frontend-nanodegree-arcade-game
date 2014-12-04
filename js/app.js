@@ -1,31 +1,44 @@
-//TODO give players a stamina factor, need to gather gems to recover stamina
-//isn't this kind of the same as having lives?
-//no, stamina goes down when you move
-//maybe lose stamina when bugs hit you?
-//or have a separate lives system?
-var rowSprites = {
-    "1": 0,
-    "2": 1 * 83 - 20,
-    "3": 2 * 83 - 20,
-    "4": 3 * 83 - 20,
-    "5": 4 * 83 - 20,
-    "6": 5 * 83 - 20
+//TODO add gems to the game
+//have player hold gems and bring them to the water to score points
+//if they get hit they loses their gems
+//Constants
+var ROW_HEIGHT = 83,
+    COL_WIDTH = 101,
+    NUM_COL = 5,
+    NUM_ENEMIES = 4,
+    VERTICAL_OFFSET = 20,
+    PLAYER_HOR_OFFSET = 14,
+    ENEMY_SIZE = [101, 171],
+    PLAYER_SIZE = [73, 171],
+    GEM_SIZE = [101, 171];
+
+//Super class for all entities
+var Entity = function(col, row, sprite, size) {
+    this.x = col * COL_WIDTH;
+    this.y = row * ROW_HEIGHT - VERTICAL_OFFSET;
+    //pos is for rectangular collision detection
+    // implement specific offsets as needed in subclasses
+    this.pos = [this.x, this.y];
+    this.size = size;
+    this.sprite = sprite;
+};
+//draw entity on screen
+Entity.prototype.render = function() {
+    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+};
+//pseudo classical inheritance
+//subClass will inherit from SuperClass
+var inherit = function(subClass, superClass) {
+    subClass.prototype = Object.create(superClass.prototype);
+    subClass.prototype.constructor = subClass;
 };
 
 // Enemies our player must avoid
-var Enemy = function() {
-    //give each enemy a random starting position
-    //columns 1 to 5
-    this.x = getRandomInt(0, 5) * 101;
-    //rows 2 to 4
-    this.y = rowSprites[getRandomInt(2, 5)];
-    this.width = 101;
-    this.pos = [this.x, this.y];
-    this.size = [101, 171];
-    this.sprite = 'images/enemy-bug.png';
+var Enemy = function(col, row) {
     this.speed = randomSpeed();
+    Entity.call(this, col, row, 'images/enemy-bug.png', ENEMY_SIZE);
 };
-
+inherit(Enemy, Entity);
 // Update the enemy's position, required method for game
 // Parameter: dt, a time delta between ticks
 Enemy.prototype.update = function(dt) {
@@ -33,80 +46,151 @@ Enemy.prototype.update = function(dt) {
     // which will ensure the game runs at the same speed for
     // all computers.
     this.x += this.speed * dt;
-    //once Enemy moves off screen to the right
-    // set starting x position off screen to -101
-    if (this.x > 505) {
-        this.x = -101;
-        this.y = rowSprites[getRandomInt(2, 5)];
-
+    //once Enemy moves off screen to the right reset position
+    // set starting x position off screen to neg enemy width for smoother animation
+    if (this.x > NUM_COL * COL_WIDTH) {
+        this.x = -ENEMY_SIZE[0];
+        this.y = getRandomInt(2, 4) * ROW_HEIGHT - VERTICAL_OFFSET;
     }
     this.pos = [this.x, this.y];
 };
 
-// Draw the enemy on the screen, required method for game
-Enemy.prototype.render = function() {
-    ctx.strokeStyle = 'red';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(this.x, this.y, 101, 171);
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
+//Player class
+var Player = function(col, row) {
+    Entity.call(this, col, row, 'images/char-boy.png', PLAYER_SIZE);
+    this.pos[0] += PLAYER_HOR_OFFSET;
+    this.numGems = 0;
 };
-
-// Now write your own player class
-// This class requires an update(), render() and
-// a handleInput() method.
-var Player = function() {
-    //starting position
-    this.x = 2 * 101;
-    //bottom row
-    this.y = rowSprites[6];
-    this.pos = [this.x + 14, this.y];
-    this.size = [73, 171];
-    this.sprite = 'images/char-boy.png';
+inherit(Player, Entity);
+Player.prototype.update = function() {
+    this.pos = [this.x + PLAYER_HOR_OFFSET, this.y];
 };
-Player.prototype.update = function(dt) {
-    this.pos = [this.x + 14, this.y];
-};
+//if player reaches river of collides with enemy then reset starting position
+//and clear gem possession
 Player.prototype.reset = function() {
-    this.x = 2 * 101;
-    this.y = rowSprites[6];
+    this.x = 2 * COL_WIDTH;
+    this.y = 5 * ROW_HEIGHT - VERTICAL_OFFSET;
+    this.numGems = 0;
+    smallGems = [];
 };
-Player.prototype.render = function() {
-    ctx.strokeStyle = 'blue';
-    ctx.lineWidth = 5;
-    ctx.strokeRect(this.x + 14, this.y, 73, 101);
-    ctx.drawImage(Resources.get(this.sprite), this.x, this.y);
-};
+//handle adding to score inside handleInput when player brings gems to river
 Player.prototype.handleInput = function(keyPress) {
-    var stepSizeVert = 83,
-        stepSizeHor = 101;
     switch (keyPress) {
         case 'left':
-            if (this.x > 0) this.x = this.x - stepSizeHor;
+            if (this.x > 0) this.x = this.x - COL_WIDTH;
             break;
         case 'right':
-            if (this.x < 404) this.x = this.x + stepSizeHor;
+            if (this.x < 404) this.x = this.x + COL_WIDTH;
             break;
         case 'up':
-            this.y > stepSizeVert ? this.y = this.y - stepSizeVert : this.y = rowSprites[6];
+            if (this.y > ROW_HEIGHT) {
+                this.y = this.y - ROW_HEIGHT
+            } else {
+                score += this.numGems;
+                updateHighestNumGems();
+                this.reset();
+            }
             break;
         case 'down':
-            if (this.y < rowSprites[6]) this.y = this.y + stepSizeVert;
+            if (this.y < 5 * ROW_HEIGHT - VERTICAL_OFFSET)
+                this.y = this.y + ROW_HEIGHT;
             break;
     }
 
 };
-//Game state
-// Now instantiate your objects.
-// Place all enemy objects in an array called allEnemies
-// Place the player object in a variable called player
-var allEnemies = [];
-(function () {
-    for (var i = 0; i < 4; i++) {
-        allEnemies[i] = new Enemy();
-    }
-})();
 
-var player = new Player();
+//gems that the player can collect for points
+var Gem = function(col, row) {
+    Entity.call(this, col, row, 'images/Gem Orange.png', GEM_SIZE);
+};
+inherit(Gem, Entity);
+Gem.prototype.update = function() {
+    this.pos = [this.x, this.y];
+};
+//spawn gem in random square after player collides with it
+Gem.prototype.reset = function() {
+    this.x = getRandomInt(0, 5) * COL_WIDTH;
+    this.y = getRandomInt(2, 4) * ROW_HEIGHT - VERTICAL_OFFSET;
+};
+
+//hearts drawn on the water to represent number of lives left
+var Heart = function(col) {
+    this.x = col * 24 + 5;
+    this.y = 55;
+    this.sprite = 'images/heart_small.png';
+};
+inherit(Heart, Entity);
+
+//small gem icons drawn on water to represent number of gems player is holding
+var SmallGem = function(col) {
+    this.x = 505 - col *24 -5;
+    this.y = 55;
+    this.sprite = 'images/Gem Orange Small.ico';
+};
+inherit(SmallGem, Entity);
+
+//Game state
+var allEnemies = [],
+    hearts = [],
+    lives = 4,
+    gem = new Gem(getRandomInt(0, 5), getRandomInt(2, 4)),
+    player = new Player(2, 5),
+    smallGems = [],
+    isGameOver,
+    score = 0,
+    scoreEl = document.getElementById('score');
+
+initHearts();
+initEnemies();
+
+function initHearts() {
+    for (var i = 0; i < lives; i++) {
+        hearts[i] = new Heart(i);
+    }
+}
+
+function initEnemies() {
+    for (var i = 0; i < NUM_ENEMIES; i++) {
+        //columns 1 to 5
+        var col = getRandomInt(0, 5);
+        //rows 2 to 4
+        var row = getRandomInt(1, 4);
+        allEnemies[i] = new Enemy(col, row);
+    }
+}
+
+//Keep track of high score
+if (!(document.getElementById('high-score'))) {
+    localStorage.setItem("high score", 0);
+}
+var highScore = localStorage.getItem("high score"),
+    highScoreEl = document.getElementById('high-score');
+highScoreEl.innerHTML = 'High Score: ' + highScore;
+
+function updateHighScore() {
+    if (score > localStorage.getItem("high score")) {
+        localStorage.setItem("high score", score);
+        highScore = localStorage.getItem("high score");
+        highScoreEl.innerHTML = 'High Score: ' + highScore;
+
+    }
+}
+
+//Keep track of highest number of gems held
+if (!(localStorage.getItem("high gem"))) {
+    localStorage.setItem("high gem", 0);
+}
+var highestNumGems = localStorage.getItem("high gem"),
+    highestNumGemsEl = document.getElementById('high-gems');
+highestNumGemsEl.innerHTML = 'Highest number of gems held: ' + highestNumGems;
+
+function updateHighestNumGems() {
+    if (player.numGems > localStorage.getItem("high gem")) {
+        localStorage.setItem("high gem", player.numGems);
+        highestNumGems = localStorage.getItem("high gem")
+        highestNumGemsEl.innerHTML = 'Highest number of gems held: ' + highestNumGems;
+    }
+}
 
 // This listens for key presses and sends the keys to your
 // Player.handleInput() method. You don't need to modify this.
@@ -120,13 +204,3 @@ document.addEventListener('keyup', function(e) {
 
     player.handleInput(allowedKeys[e.keyCode]);
 });
-
-var isGameOver;
-// The score
-var score = 0;
-var scoreEl = document.getElementById('score');
-//scoreEl.innerHTML = "Score: " + score;
-
-//need to update x and y coordinates upon reset
-// reset() also doesn't do anything right now
-//setTimeout(init, 5000);

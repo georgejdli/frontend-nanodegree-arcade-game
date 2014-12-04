@@ -84,7 +84,7 @@ var Engine = (function(global) {
     function update(dt) {
         updateEntities(dt);
         checkCollisions();
-        //update score here
+        scoreEl.innerHTML = "Score: " + score;
     }
 
     /* This is called by the update function  and loops through all of the
@@ -99,10 +99,10 @@ var Engine = (function(global) {
             enemy.update(dt);
         });
         player.update();
+        gem.update();
     }
 
 // Collisions
-    //collisions not working well
     function collides(x, y, r, x2, y2, r2) {
         if (y === y2){
             if (x2 <= x && x <= r2) {
@@ -110,6 +110,7 @@ var Engine = (function(global) {
             } else if (x <= x2 && x2 <= r){
                 return true;
             }
+            return false;
         } else {
             return false;
         }
@@ -119,6 +120,17 @@ var Engine = (function(global) {
                         pos2[0], pos2[1], pos2[0] + size2[0]);
     }
     function checkCollisions() {
+        //check collision between player and gem
+        var pos3 = gem.pos,
+            size3 = gem.size,
+            drawSmallGem;
+        if (boxCollides(player.pos, player.size, pos3, size3)) {
+            player.numGems++;
+            drawSmallGem = new SmallGem(player.numGems);
+            smallGems.push(drawSmallGem);
+            gem.reset();
+        }
+
         //check collision between player and enemies
         var i,
             l = allEnemies.length;
@@ -126,9 +138,15 @@ var Engine = (function(global) {
             var pos2 = allEnemies[i].pos,
                 size2 = allEnemies[i].size;
             if (boxCollides(player.pos, player.size, pos2, size2)) {
-                //subtract health
-                //check if health is zero, game over if it is
+                lives--;
+                hearts.pop();
                 player.reset();
+                smallGems = [];
+                if (lives <= 0) {
+                    updateHighScore();
+                    gameOver();
+                }
+                break;
             }
         }
     }
@@ -171,7 +189,7 @@ var Engine = (function(global) {
                 ctx.drawImage(Resources.get(rowImages[row]), col * 101, row * 83);
             }
         }
-
+        ctx.drawImage(Resources.get('images/Selector.png'), 2 * 101, 5 *83 - 20);
 
         renderEntities();
     }
@@ -189,14 +207,35 @@ var Engine = (function(global) {
         });
 
         player.render();
+
+        gem.render();
+
+        hearts.forEach(function(heart) {
+            heart.render();
+        });
+
+        smallGems.forEach(function(smallGem) {
+            smallGem.render();
+        })
     }
 
-    /* This function does nothing but it could have been a good place to
-     * handle game reset states - maybe a new game menu or a game over screen
-     * those sorts of things. It's only called once by the init() method.
+    //Game Over Screen
+    function gameOver() {
+        document.getElementById('game-over').style.display = 'block';
+        document.getElementById('game-over-overlay').style.display = 'block';
+        isGameOver = true;
+    }
+    /* Reset game state when player click play again
+     * It's only called once by the init() method.
      */
     function reset() {
-        // noop
+        document.getElementById('game-over').style.display = 'none';
+        document.getElementById('game-over-overlay').style.display = 'none';
+        isGameOver = false;
+        score = 0;
+        lives = 4;
+        initHearts();
+        player.reset();
     }
 
     /* Go ahead and load all of the images we know we're going to need to
@@ -208,7 +247,11 @@ var Engine = (function(global) {
         'images/water-block.png',
         'images/grass-block.png',
         'images/enemy-bug.png',
-        'images/char-boy.png'
+        'images/char-boy.png',
+        'images/Gem Orange.png',
+        'images/heart_small.png',
+        'images/Gem Orange Small.ico',
+        'images/Selector.png'
     ]);
     Resources.onReady(init);
 
