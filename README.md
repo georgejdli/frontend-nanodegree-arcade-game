@@ -3,6 +3,8 @@ Arcade Game Clone
 This is project #3 for the Front End Nanodegree from Udacity
 
 To run the game download the repository and open the index.html
+Or check out the live demo:
+http://georgejdli.github.io/frontend-nanodegree-arcade-game/
 
 To play:
 Use the arrow keys to move.
