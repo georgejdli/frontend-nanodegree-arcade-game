@@ -104,7 +104,10 @@ var Engine = (function(global) {
 
 // Collisions
     function collides(x, y, r, x2, y2, r2) {
+        // collision can only occur if both entities are on the same row
         if (y === y2){
+            //if the right edge of entity2 goes past the left edge of entity1
+            //while the left edge of entity2 is behind the left edge of entity1
             if (x2 <= x && x <= r2) {
                 return true;
             } else if (x <= x2 && x2 <= r){

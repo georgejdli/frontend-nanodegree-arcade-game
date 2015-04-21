@@ -84,7 +84,7 @@ Player.prototype.handleInput = function(keyPress) {
             break;
         case 'up':
             if (this.y > ROW_HEIGHT) {
-                this.y = this.y - ROW_HEIGHT
+                this.y = this.y - ROW_HEIGHT;
             } else {
                 score += this.numGems;
                 updateHighestNumGems();
@@ -160,10 +160,7 @@ function initEnemies() {
 }
 
 //Keep track of high score
-if (!(document.getElementById('high-score'))) {
-    localStorage.setItem("high score", 0);
-}
-var highScore = localStorage.getItem("high score"),
+var highScore = localStorage.getItem("high score") || 0,
     highScoreEl = document.getElementById('high-score');
 highScoreEl.innerHTML = 'High Score: ' + highScore;
 
@@ -187,7 +184,7 @@ highestNumGemsEl.innerHTML = 'Highest number of gems held: ' + highestNumGems;
 function updateHighestNumGems() {
     if (player.numGems > localStorage.getItem("high gem")) {
         localStorage.setItem("high gem", player.numGems);
-        highestNumGems = localStorage.getItem("high gem")
+        highestNumGems = localStorage.getItem("high gem");
         highestNumGemsEl.innerHTML = 'Highest number of gems held: ' + highestNumGems;
     }
 }
